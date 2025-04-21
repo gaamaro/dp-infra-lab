@@ -1,0 +1,40 @@
+name: Deploy EC2 com Terraform
+
+on:
+  push:
+    branches:
+      - main
+
+env:
+  VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
+  VAULT_TOKEN: ${{ secrets.VAULT_TOKEN }}
+  TF_INPUT: false
+  TF_IN_AUTOMATION: true
+
+jobs:
+  terraform:
+    name: Apply Terraform
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📦 Checkout do código
+        uses: actions/checkout@v3
+
+      - name: 🧰 Instala Terraform
+        uses: hashicorp/setup-terraform@v2
+        with:
+          terraform_version: 1.5.7
+
+      - name: 🔐 Configura credenciais de ambiente
+        run: |
+          echo "VAULT_ADDR=$VAULT_ADDR" >> $GITHUB_ENV
+          echo "VAULT_TOKEN=$VAULT_TOKEN" >> $GITHUB_ENV
+
+      - name: ⚙️ Terraform Init com backend S3
+        run: terraform init
+
+      - name: 📋 Terraform Plan
+        run: terraform plan
+
+      - name: 🚀 Terraform Apply
+        run: terraform apply -auto-approve
