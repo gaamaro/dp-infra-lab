@@ -35,6 +35,33 @@ jobs:
         run: |
           echo "VAULT_ADDR=$VAULT_ADDR" >> $GITHUB_ENV
           echo "VAULT_TOKEN=$VAULT_TOKEN" >> $GITHUB_ENV
+      
+      - name: 🔐 Exporta AWS credentials do Vault para o ambiente
+        run: |
+          echo "🔎 Buscando credenciais AWS do Vault..."
+          CREDS=$(curl -s --header "X-Vault-Token: $VAULT_TOKEN" \
+            --request GET \
+            $VAULT_ADDR/v1/kv/data/aws)
+
+          export AWS_ACCESS_KEY_ID=$(echo "$CREDS" | jq -r '.data.data.access_key')
+          export AWS_SECRET_ACCESS_KEY=$(echo "$CREDS" | jq -r '.data.data.secret_key')
+
+          # Exporta para o GitHub Actions
+          echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> $GITHUB_ENV
+
+          echo "✅ Credenciais carregadas no runner."
+
+      - name: 🧪 leitura das credenciais no Vault
+        run: |
+          echo "🔎 Verificando o conteúdo retornado do Vault..."
+          curl -s --header "X-Vault-Token: $VAULT_TOKEN" \
+            --request GET \
+            $VAULT_ADDR/v1/kv/data/aws | jq
+
+      - name: 🔍 Verificar credenciais carregadas do Vault
+        run: |
+          aws sts get-caller-identity
 
       - name: ⚙️ Terraform Init com backend S3
         run: terraform init
