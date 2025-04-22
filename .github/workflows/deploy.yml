@@ -48,9 +48,6 @@ jobs:
       - name: ⚙️ Terraform Init
         run: terraform init
 
-      - name: 📋 Terraform Plan
-        run: terraform plan -out=/tmp/tfplan.binary -var="vault_token=$VAULT_TOKEN" -var="vault_addr=$VAULT_ADDR"
-
       - name: 🛠️ Garante que a chave SSH está registrada na AWS
         run: |
           echo "🔐 Buscando chave do Vault..."
@@ -81,6 +78,9 @@ jobs:
               sleep 3
             done
           fi
+
+      - name: 📋 Terraform Plan
+        run: terraform plan -out=/tmp/tfplan.binary -var="vault_token=$VAULT_TOKEN" -var="vault_addr=$VAULT_ADDR"
 
       - name: 🚀 Terraform Apply
         run: terraform apply -auto-approve /tmp/tfplan.binary
