@@ -67,7 +67,7 @@ jobs:
         run: terraform init
 
       - name: 📋 Terraform Plan
-        run: terraform plan -var="instance_name=homelab-1" # -var="vault_token=$VAULT_TOKEN" -var="vault_addr=$VAULT_ADDR"
+        run: terraform plan -var="instance_name=homelab-1" -var="vault_token=$VAULT_TOKEN" -var="vault_addr=$VAULT_ADDR"
 
       - name: ✅ Aprovação Manual
         uses: hmarr/auto-approve-action@v3
