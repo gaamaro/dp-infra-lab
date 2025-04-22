@@ -11,4 +11,5 @@ output "ec2_public_ip" {
 output "ec2_ssh" {
   description = "Comando SSH sugerido para conectar na instância"
   value       = module.ec2.ssh_connect
+  sensitive   = true
 }
