@@ -1,7 +1,4 @@
-provider "vault" {
-  address = var.vault_addr
-  token   = var.vault_token
-}
+provider "vault" {}
 
 data "vault_kv_secret_v2" "aws" {
   mount = "kv"

@@ -18,5 +18,4 @@ variable "vault_token" {
 variable "vault_addr" {
   description = "Endereço do Vault"
   type        = string
-  default     = "http://34.219.235.200:30000"
 }
