@@ -3,5 +3,4 @@ module "ec2" {
   
   instance_name  = var.instance_name
   ssh_key_name   = data.vault_kv_secret_v2.ssh.data["key_name"]
-  vault_token    = var.vault_token
 }
