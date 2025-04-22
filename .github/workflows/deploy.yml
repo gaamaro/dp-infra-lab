@@ -49,9 +49,7 @@ jobs:
         run: terraform init
 
       - name: 📋 Terraform Plan
-        run: terraform plan -out=/tmp/tfplan.binary \
-          -var="vault_token=$VAULT_TOKEN" \
-          -var="vault_addr=$VAULT_ADDR"
+        run: terraform plan -out=/tmp/tfplan.binary -var="vault_token=$VAULT_TOKEN" -var="vault_addr=$VAULT_ADDR"
 
       - name: 🚀 Terraform Apply
         run: terraform apply -auto-approve /tmp/tfplan.binary
