@@ -68,9 +68,8 @@ jobs:
         run: terraform init
 
       - name: 📋 Terraform Plan
-        run: >
-          terraform plan -out=tfplan.binary
-          -var="vault_token=$VAULT_TOKEN"
+        run: terraform plan -out=tfplan.binary \
+          -var="vault_token=$VAULT_TOKEN" \
           -var="vault_addr=$VAULT_ADDR"
 
   approve:
@@ -87,7 +86,7 @@ jobs:
   apply:
     name: 🚀 Terraform Apply
     runs-on: self-hosted
-    needs: [plan, approve]
+    needs: [config, plan, approve]
 
     steps:
       - name: 📦 Checkout do código
