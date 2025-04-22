@@ -73,6 +73,20 @@ jobs:
               --public-key-material "$PUBLIC_KEY"
             echo "✅ Chave '$KEY_NAME' importada com sucesso."
           fi
+          echo "🚀 Importando chave '$KEY_NAME' para a AWS..."
+          aws ec2 import-key-pair \
+            --key-name "$KEY_NAME" \
+            --public-key-material "$PUBLIC_KEY"
+          echo "⏳ Aguardando a chave ser propagada pela AWS..."
+
+          for i in {1..10}; do
+            if aws ec2 describe-key-pairs --key-names "$KEY_NAME" > /dev/null 2>&1; then
+              echo "✅ Chave '$KEY_NAME' agora está disponível."
+              break
+            fi
+            echo "⏱️ Tentando novamente em 3 segundos..."
+            sleep 3
+          done
 
       - name: 🚀 Terraform Apply
         run: terraform apply -auto-approve /tmp/tfplan.binary
