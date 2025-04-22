@@ -18,13 +18,9 @@ env:
   TF_IN_AUTOMATION: true
 
 jobs:
-  config:
-    name: 🔧 Configuração do ambiente
+  terraform:
+    name: 🚀 Deploy EC2 com Terraform
     runs-on: self-hosted
-
-    outputs:
-      aws_access_key_id: ${{ steps.export-creds.outputs.aws_access_key_id }}
-      aws_secret_access_key: ${{ steps.export-creds.outputs.aws_secret_access_key }}
 
     steps:
       - name: 📦 Checkout do código
@@ -45,24 +41,8 @@ jobs:
           AWS_ACCESS_KEY_ID=$(echo "$CREDS" | jq -r '.data.data.access_key')
           AWS_SECRET_ACCESS_KEY=$(echo "$CREDS" | jq -r '.data.data.secret_key')
 
-          echo "aws_access_key_id=$AWS_ACCESS_KEY_ID" >> $GITHUB_OUTPUT
-          echo "aws_secret_access_key=$AWS_SECRET_ACCESS_KEY" >> $GITHUB_OUTPUT
-
-  plan:
-    name: 📋 Terraform Plan
-    runs-on: self-hosted
-    needs: config
-
-    steps:
-      - name: 📦 Checkout do código
-        uses: actions/checkout@v3
-
-      - name: 🔐 Configura credenciais e variáveis VAULT
-        run: |
-          echo "VAULT_ADDR=$VAULT_ADDR" >> $GITHUB_ENV
-          echo "VAULT_TOKEN=$VAULT_TOKEN" >> $GITHUB_ENV
-          echo "AWS_ACCESS_KEY_ID=${{ needs.config.outputs.aws_access_key_id }}" >> $GITHUB_ENV
-          echo "AWS_SECRET_ACCESS_KEY=${{ needs.config.outputs.aws_secret_access_key }}" >> $GITHUB_ENV
+          echo "AWS_ACCESS_KEY_ID=$AWS_ACCESS_KEY_ID" >> $GITHUB_ENV
+          echo "AWS_SECRET_ACCESS_KEY=$AWS_SECRET_ACCESS_KEY" >> $GITHUB_ENV
 
       - name: ⚙️ Terraform Init
         run: terraform init
@@ -70,32 +50,14 @@ jobs:
       - name: 📋 Terraform Plan
         run: terraform plan -out=tfplan.binary -var="vault_token=$VAULT_TOKEN" -var="vault_addr=$VAULT_ADDR"
 
-  approve:
-    name: ✅ Aprovação manual
-    runs-on: self-hosted
-    needs: plan
-    environment:
-      name: homelab
-      url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
-    steps:
-      - name: 🚩 Esperando aprovação
-        run: echo "Aguardando aprovação manual para o apply..."
-
-  apply:
-    name: 🚀 Terraform Apply
-    runs-on: self-hosted
-    needs: [config, plan, approve]
-
-    steps:
-      - name: 📦 Checkout do código
-        uses: actions/checkout@v3
-
-      - name: 🔐 Configura credenciais e variáveis VAULT
-        run: |
-          echo "VAULT_ADDR=$VAULT_ADDR" >> $GITHUB_ENV
-          echo "VAULT_TOKEN=$VAULT_TOKEN" >> $GITHUB_ENV
-          echo "AWS_ACCESS_KEY_ID=${{ needs.config.outputs.aws_access_key_id }}" >> $GITHUB_ENV
-          echo "AWS_SECRET_ACCESS_KEY=${{ needs.config.outputs.aws_secret_access_key }}" >> $GITHUB_ENV
+      - name: ✅ Pausa para Aprovação Manual
+        uses: trstringer/manual-approval@v1
+        with:
+          secret: ${{ secrets.GITHUB_TOKEN }}
+          approvers: gabrielamaro
+          minimum-approvals: 1
+          issue-title: "Aprovação do Apply"
+          issue-body: "Clique para aprovar o Terraform Apply no homelab."
 
       - name: 🚀 Terraform Apply
         run: terraform apply -auto-approve tfplan.binary
