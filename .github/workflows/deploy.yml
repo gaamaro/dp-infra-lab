@@ -4,6 +4,12 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:  # 👈 permite execução manual pelo botão no GitHub
+    inputs:
+      ambiente:
+        description: "Ambiente de destino"
+        required: true
+        default: "homelab"
 
 env:
   VAULT_ADDR: ${{ secrets.VAULT_ADDR }}
