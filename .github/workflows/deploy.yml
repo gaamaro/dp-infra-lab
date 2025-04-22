@@ -50,6 +50,8 @@ jobs:
 
       - name: 🛠️ Garante que a chave SSH está registrada na AWS
         run: |
+          set -euo pipefail
+
           echo "🔐 Buscando chave do Vault..."
           VAULT_SSH=$(curl -s --header "X-Vault-Token: $VAULT_TOKEN" \
             --request GET \
@@ -57,20 +59,41 @@ jobs:
 
           KEY_NAME=$(echo "$VAULT_SSH" | jq -r '.data.data.key_name')
           PUBLIC_KEY_RAW=$(echo "$VAULT_SSH" | jq -r '.data.data.public_key')
-          PUBLIC_KEY=$(echo "$PUBLIC_KEY_RAW" | base64 | tr -d '\n')
+          REGION="${AWS_REGION:-us-east-1}"
+
+          echo "📝 Nome da chave: $KEY_NAME"
+          echo "📝 Primeiros caracteres da chave pública: $(echo "$PUBLIC_KEY_RAW" | cut -c1-40)..."
+          echo "📝 Região: $REGION"
+
+          if [[ -z "$KEY_NAME" ]] || [[ -z "$PUBLIC_KEY_RAW" ]]; then
+            echo "❌ ERRO: KEY_NAME ou PUBLIC_KEY_RAW está vazio!"
+            exit 1
+          fi
+
+          PUBLIC_KEY_B64=$(echo "$PUBLIC_KEY_RAW" | base64 | tr -d '\n')
+          if [[ -z "$PUBLIC_KEY_B64" ]]; then
+            echo "❌ ERRO: Falha ao gerar chave pública em base64"
+            exit 1
+          fi
 
           echo "🔍 Verificando se a chave '$KEY_NAME' já existe na AWS..."
-          if aws ec2 describe-key-pairs --key-names "$KEY_NAME" > /dev/null 2>&1; then
+          if aws ec2 describe-key-pairs --key-names "$KEY_NAME" --region "$REGION" > /dev/null 2>&1; then
             echo "✅ Chave '$KEY_NAME' já existe na AWS."
           else
             echo "🚀 Importando chave '$KEY_NAME' para a AWS..."
-            aws ec2 import-key-pair \
+            if ! aws ec2 import-key-pair \
               --key-name "$KEY_NAME" \
-              --public-key-material "$PUBLIC_KEY"
-            echo "⏳ Aguardando a chave ser propagada pela AWS..."
+              --public-key-material "$PUBLIC_KEY_B64" \
+              --region "$REGION"; then
+                echo "❌ ERRO ao importar o par de chaves para a AWS!"
+                echo "🔎 KEY_NAME: $KEY_NAME"
+                echo "🔎 PUBLIC_KEY_B64: ${PUBLIC_KEY_B64:0:40}..."
+                exit 2
+            fi
 
+            echo "⏳ Aguardando a chave ser propagada pela AWS..."
             for i in {1..10}; do
-              if aws ec2 describe-key-pairs --key-names "$KEY_NAME" > /dev/null 2>&1; then
+              if aws ec2 describe-key-pairs --key-names "$KEY_NAME" --region "$REGION" > /dev/null 2>&1; then
                 echo "✅ Chave '$KEY_NAME' agora está disponível."
                 break
               fi
