@@ -51,5 +51,26 @@ jobs:
       - name: 📋 Terraform Plan
         run: terraform plan -out=/tmp/tfplan.binary -var="vault_token=$VAULT_TOKEN" -var="vault_addr=$VAULT_ADDR"
 
+      - name: 🛠️ Garante que a chave SSH está registrada na AWS
+        run: |
+          echo "🔐 Buscando chave do Vault..."
+          VAULT_SSH=$(curl -s --header "X-Vault-Token: $VAULT_TOKEN" \
+            --request GET \
+            $VAULT_ADDR/v1/kv/data/ssh-default)
+      
+          KEY_NAME=$(echo "$VAULT_SSH" | jq -r '.data.data.key_name')
+          PUBLIC_KEY=$(echo "$VAULT_SSH" | jq -r '.data.data.public_key')
+      
+          echo "🔍 Verificando se a chave '$KEY_NAME' já existe na AWS..."
+          if aws ec2 describe-key-pairs --key-names "$KEY_NAME" > /dev/null 2>&1; then
+            echo "✅ Chave '$KEY_NAME' já existe na AWS."
+          else
+            echo "🚀 Importando chave '$KEY_NAME' para a AWS..."
+            aws ec2 import-key-pair \
+              --key-name "$KEY_NAME" \
+              --public-key-material "$PUBLIC_KEY"
+            echo "✅ Chave '$KEY_NAME' importada com sucesso."
+          fi
+
       - name: 🚀 Terraform Apply
         run: terraform apply -auto-approve /tmp/tfplan.binary
