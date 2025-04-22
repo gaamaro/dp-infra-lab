@@ -57,7 +57,7 @@ jobs:
       - name: 📦 Checkout do código
         uses: actions/checkout@v3
 
-      - name: 🔐 Configura credenciais e variável VAULT
+      - name: 🔐 Configura credenciais e variáveis VAULT
         run: |
           echo "VAULT_ADDR=$VAULT_ADDR" >> $GITHUB_ENV
           echo "VAULT_TOKEN=$VAULT_TOKEN" >> $GITHUB_ENV
@@ -68,8 +68,9 @@ jobs:
         run: terraform init
 
       - name: 📋 Terraform Plan
-        run: terraform plan -out=tfplan.binary \
-          -var="vault_token=$VAULT_TOKEN" \
+        run: >
+          terraform plan -out=tfplan.binary
+          -var="vault_token=$VAULT_TOKEN"
           -var="vault_addr=$VAULT_ADDR"
 
       - name: 📦 Armazena plano como artefato
@@ -103,7 +104,7 @@ jobs:
         with:
           name: tfplan
 
-      - name: 🔐 Configura credenciais e variável VAULT
+      - name: 🔐 Configura credenciais e variáveis VAULT
         run: |
           echo "VAULT_ADDR=$VAULT_ADDR" >> $GITHUB_ENV
           echo "VAULT_TOKEN=$VAULT_TOKEN" >> $GITHUB_ENV
