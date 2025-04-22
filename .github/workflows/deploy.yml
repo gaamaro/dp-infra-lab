@@ -72,7 +72,7 @@ jobs:
 
   approve:
     name: ✅ Aprovação manual
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: plan
     environment:
       name: homelab
