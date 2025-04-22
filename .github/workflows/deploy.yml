@@ -53,6 +53,9 @@ jobs:
     runs-on: self-hosted
     needs: config
 
+    outputs:
+      tfplan-exists: true
+
     steps:
       - name: 📦 Checkout do código
         uses: actions/checkout@v3
@@ -70,9 +73,15 @@ jobs:
       - name: 📋 Terraform Plan
         run: terraform plan -out=tfplan.binary -var="vault_token=$VAULT_TOKEN" -var="vault_addr=$VAULT_ADDR"
 
+      - name: 📤 Salva plano como artefato
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: tfplan.binary
+
   approve:
     name: ✅ Aprovação manual
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     needs: plan
     environment:
       name: homelab
@@ -96,6 +105,11 @@ jobs:
           echo "VAULT_TOKEN=$VAULT_TOKEN" >> $GITHUB_ENV
           echo "AWS_ACCESS_KEY_ID=${{ needs.config.outputs.aws_access_key_id }}" >> $GITHUB_ENV
           echo "AWS_SECRET_ACCESS_KEY=${{ needs.config.outputs.aws_secret_access_key }}" >> $GITHUB_ENV
+
+      - name: 📂 Recupera plano salvo
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
 
       - name: 🚀 Terraform Apply
         run: terraform apply -auto-approve tfplan.binary
