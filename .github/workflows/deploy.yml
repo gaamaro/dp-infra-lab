@@ -57,12 +57,11 @@ jobs:
           VAULT_SSH=$(curl -s --header "X-Vault-Token: $VAULT_TOKEN" \
             --request GET \
             $VAULT_ADDR/v1/kv/data/ssh-default)
-      
+
           KEY_NAME=$(echo "$VAULT_SSH" | jq -r '.data.data.key_name')
-          # Extrai a chave pública do Vault e converte para base64
           PUBLIC_KEY_RAW=$(echo "$VAULT_SSH" | jq -r '.data.data.public_key')
           PUBLIC_KEY=$(echo "$PUBLIC_KEY_RAW" | base64 | tr -d '\n')
-      
+
           echo "🔍 Verificando se a chave '$KEY_NAME' já existe na AWS..."
           if aws ec2 describe-key-pairs --key-names "$KEY_NAME" > /dev/null 2>&1; then
             echo "✅ Chave '$KEY_NAME' já existe na AWS."
@@ -71,22 +70,17 @@ jobs:
             aws ec2 import-key-pair \
               --key-name "$KEY_NAME" \
               --public-key-material "$PUBLIC_KEY"
-            echo "✅ Chave '$KEY_NAME' importada com sucesso."
-          fi
-          echo "🚀 Importando chave '$KEY_NAME' para a AWS..."
-          aws ec2 import-key-pair \
-            --key-name "$KEY_NAME" \
-            --public-key-material "$PUBLIC_KEY"
-          echo "⏳ Aguardando a chave ser propagada pela AWS..."
+            echo "⏳ Aguardando a chave ser propagada pela AWS..."
 
-          for i in {1..10}; do
-            if aws ec2 describe-key-pairs --key-names "$KEY_NAME" > /dev/null 2>&1; then
-              echo "✅ Chave '$KEY_NAME' agora está disponível."
-              break
-            fi
-            echo "⏱️ Tentando novamente em 3 segundos..."
-            sleep 3
-          done
+            for i in {1..10}; do
+              if aws ec2 describe-key-pairs --key-names "$KEY_NAME" > /dev/null 2>&1; then
+                echo "✅ Chave '$KEY_NAME' agora está disponível."
+                break
+              fi
+              echo "⏱️ Tentando novamente em 3 segundos..."
+              sleep 3
+            done
+          fi
 
       - name: 🚀 Terraform Apply
         run: terraform apply -auto-approve /tmp/tfplan.binary
