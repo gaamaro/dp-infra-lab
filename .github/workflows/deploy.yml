@@ -73,15 +73,9 @@ jobs:
           -var="vault_token=$VAULT_TOKEN"
           -var="vault_addr=$VAULT_ADDR"
 
-      - name: 📦 Armazena plano como artefato
-        uses: actions/upload-artifact@v4
-        with:
-          name: tfplan
-          path: tfplan.binary
-
   approve:
     name: ✅ Aprovação manual
-    runs-on: ubuntu-latest
+    runs-on: self-hosted
     needs: plan
     environment:
       name: homelab
@@ -98,11 +92,6 @@ jobs:
     steps:
       - name: 📦 Checkout do código
         uses: actions/checkout@v3
-
-      - name: 📅 Baixa plano
-        uses: actions/download-artifact@v4
-        with:
-          name: tfplan
 
       - name: 🔐 Configura credenciais e variáveis VAULT
         run: |
