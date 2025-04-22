@@ -73,7 +73,7 @@ jobs:
           -var="vault_addr=$VAULT_ADDR"
 
       - name: 📦 Armazena plano como artefato
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: tfplan
           path: tfplan.binary
@@ -86,7 +86,7 @@ jobs:
       name: homelab
       url: https://github.com/${{ github.repository }}/actions/runs/${{ github.run_id }}
     steps:
-      - name: 🛑 Esperando aprovação
+      - name: 🚩 Esperando aprovação
         run: echo "Aguardando aprovação manual para o apply..."
 
   apply:
@@ -98,8 +98,8 @@ jobs:
       - name: 📦 Checkout do código
         uses: actions/checkout@v3
 
-      - name: 📥 Baixa plano
-        uses: actions/download-artifact@v3
+      - name: 📅 Baixa plano
+        uses: actions/download-artifact@v4
         with:
           name: tfplan
 
