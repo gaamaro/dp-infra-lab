@@ -116,9 +116,10 @@ jobs:
 
           VAULT_PATH="kv/data/ec2-ip"
           echo "💾 Salvando IP no Vault (${VAULT_ADDR}) em ${VAULT_PATH}..."
+          JSON_DATA=$(jq -n --arg ip "$EC2_IP" '{"data": {"ip": $ip}}')
           curl --header "X-Vault-Token: ${VAULT_TOKEN}" \
             --request POST \
-            --data "{\"data\": {\"ip\": \"${EC2_IP}\"}}" \
+            --data "$JSON_DATA" \
             ${VAULT_ADDR}/v1/${VAULT_PATH}
 
   install_dynatrace:
