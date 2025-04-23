@@ -175,6 +175,9 @@ jobs:
           $EC2_IP ansible_ssh_private_key_file=/tmp/ssh_key ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'
           EOF
 
+          echo "🔧 Instalando dependências na máquina remota..."
+          ssh -i /tmp/ssh_key -o StrictHostKeyChecking=no ubuntu@$EC2_IP 'sudo apt-get update && sudo apt-get install -y python3-pip && sudo pip3 install ansible'
+
       - name: 🚀 Executa playbook do Ansible
         run: ansible-playbook -i /tmp/inventory.ini ansible/oneagent.yaml
         env:
