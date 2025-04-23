@@ -117,7 +117,7 @@ jobs:
           echo "💾 Salvando IP no Vault..."
           curl -s --header "X-Vault-Token: $VAULT_TOKEN" \
             --request POST \
-            --data "{\"data\": {\"data\": {\"ec2_ip\": \"$EC2_IP\"}}}" \
+            --data "{\"data\": {\"ec2_ip\": \"$EC2_IP\"}}" \
             $VAULT_ADDR/v1/kv/data/ec2-ip
 
   install_dynatrace:
