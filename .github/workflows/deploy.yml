@@ -107,3 +107,27 @@ jobs:
 
       - name: 🚀 Terraform Apply
         run: terraform apply -auto-approve /tmp/tfplan.binary
+
+      - name: 🔄 Instalação do Dynatrace OneAgent via Ansible
+        run: |
+          echo "🔍 Obtendo IP da EC2 do output do Terraform..."
+          EC2_IP=$(terraform output -raw ec2_public_ip)
+          echo "📝 IP da EC2: $EC2_IP"
+
+          echo "🔐 Obtendo chave SSH do Vault..."
+          VAULT_SSH=$(curl -s --header "X-Vault-Token: $VAULT_TOKEN" \
+            --request GET \
+            $VAULT_ADDR/v1/kv/data/ssh-default)
+
+          PRIVATE_KEY=$(echo "$VAULT_SSH" | jq -r '.data.data.private_key')
+          echo "$PRIVATE_KEY" > /tmp/ssh_key
+          chmod 600 /tmp/ssh_key
+
+          echo "📋 Criando arquivo de inventory..."
+          cat > /tmp/inventory.ini << EOF
+          [ec2]
+          $EC2_IP ansible_ssh_private_key_file=/tmp/ssh_key ansible_user=ubuntu
+          EOF
+
+          echo "🚀 Executando playbook do Ansible..."
+          ansible-playbook -i /tmp/inventory.ini ansible/oneagent.yaml

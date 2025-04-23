@@ -1,0 +1,65 @@
+---
+- name: Instalação do Dynatrace OneAgent seguindo passos customizados
+  hosts: all
+  become: yes
+
+  vars:
+    dynatrace_env_url: ""    # Exemplo: https://XXXX.live.dynatrace.com
+    dynatrace_token: ""      # Token Dynatrace
+    dynatrace_installer: "Dynatrace-OneAgent-Linux-x86-latest.sh"
+    host_group: ""           # Exemplo: dp-lab
+    env_property: ""         # Exemplo: dev
+    platform_property: ""    # Exemplo: docker
+    monitoring_mode: "fullstack"
+    app_log_access: "true"
+
+  tasks:
+    - name: Instalar dependências básicas necessárias
+      apt:
+        name: [wget, openssl, ca-certificates, curl]
+        state: present
+        update_cache: yes
+
+    - name: Baixar instalador do Dynatrace OneAgent usando wget
+      ansible.builtin.shell: |
+        wget -O {{ dynatrace_installer }} "{{ dynatrace_env_url }}/api/v1/deployment/installer/agent/unix/default/latest?arch=x86" --header="Authorization: Api-Token {{ dynatrace_token }}"
+      args:
+        chdir: /tmp
+        creates: "/tmp/{{ dynatrace_installer }}"
+      register: wget_out
+      changed_when: "'saved' in wget_out.stdout or 'baixados' in wget_out.stdout"
+
+    - name: Baixar certificado raiz Dynatrace
+      get_url:
+        url: "https://ca.dynatrace.com/dt-root.cert.pem"
+        dest: /tmp/dt-root.cert.pem
+        mode: '0644'
+        force: yes
+
+    - name: Validar assinatura do instalador
+      ansible.builtin.shell: |
+        ( echo 'Content-Type: multipart/signed; protocol="application/x-pkcs7-signature"; micalg="sha-256"; boundary="--SIGNED-INSTALLER"'; echo; echo; echo '----SIGNED-INSTALLER'; cat {{ dynatrace_installer }} ) | \
+        openssl cms -verify -CAfile dt-root.cert.pem > /dev/null
+      args:
+        chdir: /tmp
+
+    - name: Executar instalador do OneAgent com parâmetros customizados
+      ansible.builtin.shell: >
+        /bin/sh {{ dynatrace_installer }}
+        --set-monitoring-mode={{ monitoring_mode }}
+        --set-app-log-content-access={{ app_log_access }}
+        --set-host-group={{ host_group }}
+        --set-host-property=env={{ env_property }}
+        --set-host-property=platform={{ platform_property }}
+        --set-apikey={{ dynatrace_token }}
+        --set-tenant={{ dynatrace_env_url | regex_replace('^https?://', '') }}
+      args:
+        chdir: /tmp
+
+    - name: Remover instalador e certificado (opcional, segurança)
+      file:
+        path: "/tmp/{{ item }}"
+        state: absent
+      with_items:
+        - "{{ dynatrace_installer }}"
+        - "dt-root.cert.pem"
