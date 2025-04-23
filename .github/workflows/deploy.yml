@@ -202,7 +202,7 @@ jobs:
           EOF
 
           echo "🔧 Normalizando dependências na EC2..."
-          ssh -i /tmp/ssh_key -o StrictHostKeyChecking=no ubuntu@"$EC2_IP" "sudo apt-get update && sudo apt-get install -y python3-pip python3-venv && python3 -m venv /tmp/ansible-venv && source /tmp/ansible-venv/bin/activate && pip install --upgrade pip setuptools wheel && pip install ansible"
+          ssh -i /tmp/ssh_key -o StrictHostKeyChecking=no ubuntu@"$EC2_IP" "sudo apt install -y python3 python3-pip python3-venv && python3 -m venv /tmp/ansible-venv && source /tmp/ansible-venv/bin/activate && pip install --upgrade pip setuptools wheel && pip install ansible"
 
       - name: 🚀 Executa playbook do Ansible
         run: ansible-playbook -i /tmp/inventory.ini ansible/oneagent.yaml --extra-vars "dynatrace_env=${{ env.DYNATRACE_ENV }} dynatrace_token=${{ env.DYNATRACE_TOKEN }}"
