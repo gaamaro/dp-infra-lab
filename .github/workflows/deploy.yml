@@ -202,10 +202,10 @@ jobs:
           EOF
           
           echo "🔧 Instalando dependências na máquina remota..."
-          ssh -i /tmp/ssh_key -o StrictHostKeyChecking=no ubuntu@"$EC2_IP" "sudo apt-get update && sudo apt-get install -y python3-pip && sudo pip3 install ansible"
+          ssh -i /tmp/ssh_key -o StrictHostKeyChecking=no ubuntu@"$EC2_IP" "sudo apt-get update && sudo apt-get install -y python3-pip python3-venv && python3 -m venv /tmp/ansible-venv && source /tmp/ansible-venv/bin/activate && pip install ansible"
 
       - name: 🚀 Executa playbook do Ansible
-        run: ansible-playbook -i /tmp/inventory.ini ansible/oneagent.yaml
+        run: ssh -i /tmp/ssh_key -o StrictHostKeyChecking=no ubuntu@"$EC2_IP" "source /tmp/ansible-venv/bin/activate && ansible-playbook -i /tmp/inventory.ini ansible/oneagent.yaml"
         env:
           DYNATRACE_ENV: ${{ env.DYNATRACE_ENV }}
           DYNATRACE_TOKEN: ${{ env.DYNATRACE_TOKEN }}
