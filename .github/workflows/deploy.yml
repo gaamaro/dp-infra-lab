@@ -108,10 +108,40 @@ jobs:
       - name: 🚀 Terraform Apply
         run: terraform apply -auto-approve /tmp/tfplan.binary
 
-      - name: 🔄 Instalação do Dynatrace OneAgent via Ansible
+      - name: 💾 Salva IP da EC2 no Vault
         run: |
           echo "🔍 Obtendo IP da EC2 do output do Terraform..."
           EC2_IP=$(terraform output -raw ec2_public_ip)
+          echo "📝 IP da EC2: $EC2_IP"
+
+          echo "💾 Salvando IP no Vault..."
+          curl -s --header "X-Vault-Token: $VAULT_TOKEN" \
+            --request POST \
+            --data "{\"data\": {\"ec2_ip\": \"$EC2_IP\"}}" \
+            $VAULT_ADDR/v1/kv/data/ec2-ip
+
+  install_dynatrace:
+    name: 🔄 Instalação do Dynatrace OneAgent
+    needs: deploy
+    runs-on: self-hosted
+
+    steps:
+      - name: 📦 Checkout do código
+        uses: actions/checkout@v3
+
+      - name: 🧰 Instala Ansible
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ansible
+
+      - name: 🔐 Obtém IP da EC2 e chave SSH do Vault
+        run: |
+          echo "🔍 Obtendo IP da EC2 do Vault..."
+          VAULT_EC2=$(curl -s --header "X-Vault-Token: $VAULT_TOKEN" \
+            --request GET \
+            $VAULT_ADDR/v1/kv/data/ec2-ip)
+          
+          EC2_IP=$(echo "$VAULT_EC2" | jq -r '.data.data.ec2_ip')
           echo "📝 IP da EC2: $EC2_IP"
 
           echo "🔐 Obtendo chave SSH do Vault..."
@@ -129,5 +159,5 @@ jobs:
           $EC2_IP ansible_ssh_private_key_file=/tmp/ssh_key ansible_user=ubuntu
           EOF
 
-          echo "🚀 Executando playbook do Ansible..."
-          ansible-playbook -i /tmp/inventory.ini ansible/oneagent.yaml
+      - name: 🚀 Executa playbook do Ansible
+        run: ansible-playbook -i /tmp/inventory.ini ansible/oneagent.yaml
