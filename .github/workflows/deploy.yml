@@ -131,16 +131,13 @@ jobs:
 
       - name: 🧰 Instala Ansible
         run: |
-          echo 'tzdata tzdata/Areas select America' | sudo debconf-set-selections
-          echo 'tzdata tzdata/Zones/America select Sao_Paulo' | sudo debconf-set-selections
-          sudo apt-get update
-          sudo apt-get install -y ansible
+          ansible --version
 
       - name: 🔐 Obtém IP da EC2 e chave SSH do Vault
         run: |
           echo "🔍 Obtendo IP da EC2 do Vault..."
           VAULT_EC2=$(curl -s --header "X-Vault-Token: $VAULT_TOKEN" \
-            --request GET \
+            --request GET \x
             $VAULT_ADDR/v1/kv/data/ec2-ip)
           
           EC2_IP=$(echo "$VAULT_EC2" | jq -r '.data.data.ec2_ip')
