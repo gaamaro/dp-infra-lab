@@ -18,7 +18,7 @@ install-oneagent: check-env
 	@echo "🚀 Iniciando instalação do OneAgent em $(EC2_IP)..."
 	@ssh -i $(SSH_KEY) -o StrictHostKeyChecking=no ubuntu@$(EC2_IP) "\
 		echo '📥 Baixando instalador do OneAgent...' && \
-		wget -O Dynatrace-OneAgent-Linux-x86-latest.sh '$(DYNATRACE_ENV)/api/v1/deployment/installer/agent/unix/default/latest?arch=x86' \
+		wget -O Dynatrace-OneAgent-Linux-x86-latest.sh '$(DYNATRACE_ENV)/api/v1/deployment/installer/agent/unix/default/latest?arch=x86&flavor=default' \
 			--header='Authorization: Api-Token $(DYNATRACE_TOKEN)' && \
 		echo '🔒 Tornando o instalador executável...' && \
 		chmod +x Dynatrace-OneAgent-Linux-x86-latest.sh && \
