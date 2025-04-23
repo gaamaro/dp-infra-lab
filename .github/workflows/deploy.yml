@@ -140,9 +140,10 @@ jobs:
       - name: 📦 Checkout do código
         uses: actions/checkout@v3
 
-      - name: 🧰 Instala Ansible
+      - name: 🧰 Instala dependências
         run: |
-          ansible --version
+          sudo apt-get update
+          sudo apt-get install -y make
 
       - name: 🔐 Obtém IP da EC2 e chave SSH do Vault
         run: |
@@ -194,15 +195,8 @@ jobs:
           
           echo "DYNATRACE_ENV=$DT_ENV" >> $GITHUB_ENV
           echo "DYNATRACE_TOKEN=$DT_TOKEN" >> $GITHUB_ENV
-          
-          echo "📋 Criando arquivo de inventory..."
-          cat > /tmp/inventory.ini << EOF
-          [ec2]
-          $EC2_IP ansible_ssh_private_key_file=/tmp/ssh_key ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'
-          EOF
 
-          echo "🔧 Normalizando dependências na EC2..."
-          ssh -i /tmp/ssh_key -o StrictHostKeyChecking=no ubuntu@"$EC2_IP" "sudo apt install -y python3 python3-pip python3-venv && python3 -m venv /tmp/ansible-venv && source /tmp/ansible-venv/bin/activate && pip install --upgrade pip setuptools wheel && pip install ansible"
-
-      - name: 🚀 Executa playbook do Ansible
-        run: ansible-playbook -i /tmp/inventory.ini ansible/oneagent.yaml --extra-vars "dynatrace_env=${{ env.DYNATRACE_ENV }} dynatrace_token=${{ env.DYNATRACE_TOKEN }}"
+      - name: 🚀 Executa instalação do OneAgent
+        run: |
+          cd config
+          make install-oneagent EC2_IP="$EC2_IP" DYNATRACE_ENV="$DYNATRACE_ENV" DYNATRACE_TOKEN="$DYNATRACE_TOKEN"
