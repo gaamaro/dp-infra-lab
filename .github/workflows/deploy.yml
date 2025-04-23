@@ -114,11 +114,12 @@ jobs:
           EC2_IP=$(terraform output -raw ec2_public_ip)
           echo "📝 IP da EC2: $EC2_IP"
 
-          echo "💾 Salvando IP no Vault..."
-          curl -s --header "X-Vault-Token: $VAULT_TOKEN" \
+          VAULT_PATH="kv/data/ec2-ip"
+          echo "💾 Salvando IP no Vault (${VAULT_ADDR}) em ${VAULT_PATH}..."
+          curl --header "X-Vault-Token: ${VAULT_TOKEN}" \
             --request POST \
-            --data "{\"data\": {\"ec2_ip\": \"$EC2_IP\"}}" \
-            $VAULT_ADDR/v1/kv/data/ec2-ip
+            --data "{\"data\": {\"ip\": \"${EC2_IP}\"}}" \
+            ${VAULT_ADDR}/v1/${VAULT_PATH}
 
   install_dynatrace:
     name: 🔄 Instalação do Dynatrace OneAgent
