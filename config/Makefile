@@ -1,24 +1,29 @@
 .PHONY: install-oneagent clean
 
 # Variáveis
-DYNATRACE_ENV ?= $(shell echo $$DYNATRACE_ENV)
+DYNATRACE_ENV ?= $(shell echo $$DYNATRACE_ENV | sed 's/apps.dynatrace.com/live.dynatrace.com/')
 DYNATRACE_TOKEN ?= $(shell echo $$DYNATRACE_TOKEN)
 EC2_IP ?= $(shell echo $$EC2_IP)
 SSH_KEY ?= /tmp/ssh_key
 
 # Verifica se as variáveis necessárias estão definidas
 check-env:
+	@echo "🔍 Verificando variáveis de ambiente..."
 	@if [ -z "$(DYNATRACE_ENV)" ]; then echo "❌ DYNATRACE_ENV não definido"; exit 1; fi
 	@if [ -z "$(DYNATRACE_TOKEN)" ]; then echo "❌ DYNATRACE_TOKEN não definido"; exit 1; fi
 	@if [ -z "$(EC2_IP)" ]; then echo "❌ EC2_IP não definido"; exit 1; fi
 	@if [ ! -f "$(SSH_KEY)" ]; then echo "❌ Chave SSH não encontrada em $(SSH_KEY)"; exit 1; fi
+	@echo "✅ Todas as variáveis de ambiente estão definidas"
+	@echo "📝 DYNATRACE_ENV: $(DYNATRACE_ENV)"
+	@echo "📝 EC2_IP: $(EC2_IP)"
 
 # Instala o OneAgent
 install-oneagent: check-env
 	@echo "🚀 Iniciando instalação do OneAgent em $(EC2_IP)..."
+	@echo "📥 URL do instalador: $(DYNATRACE_ENV)/api/v1/deployment/installer/agent/unix/default/latest?arch=x86"
 	@ssh -i $(SSH_KEY) -o StrictHostKeyChecking=no ubuntu@$(EC2_IP) "\
 		echo '📥 Baixando instalador do OneAgent...' && \
-		wget -O Dynatrace-OneAgent-Linux-x86-latest.sh '$(DYNATRACE_ENV)/api/v1/deployment/installer/agent/unix/default/latest?arch=x86&flavor=default' \
+		wget -O Dynatrace-OneAgent-Linux-x86-latest.sh '$(DYNATRACE_ENV)/api/v1/deployment/installer/agent/unix/default/latest?arch=x86' \
 			--header='Authorization: Api-Token $(DYNATRACE_TOKEN)' && \
 		echo '🔒 Tornando o instalador executável...' && \
 		chmod +x Dynatrace-OneAgent-Linux-x86-latest.sh && \
