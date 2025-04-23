@@ -131,8 +131,9 @@ jobs:
 
       - name: 🧰 Instala Ansible
         run: |
+          export DEBIAN_FRONTEND=noninteractive
           sudo apt-get update
-          sudo apt-get install -y ansible
+          sudo apt-get install -y ansible tzdata
 
       - name: 🔐 Obtém IP da EC2 e chave SSH do Vault
         run: |
