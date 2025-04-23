@@ -158,11 +158,25 @@ jobs:
           echo "$PRIVATE_KEY" > /tmp/ssh_key
           chmod 600 /tmp/ssh_key
 
+          echo "🔐 Obtendo credenciais Dynatrace do Vault..."
+          VAULT_DT=$(curl -s --header "X-Vault-Token: $VAULT_TOKEN" \
+            --request GET \
+            $VAULT_ADDR/v1/kv/data/dynatrace)
+          
+          DT_ENV=$(echo "$VAULT_DT" | jq -r '.data.data.env')
+          DT_TOKEN=$(echo "$VAULT_DT" | jq -r '.data.data.token')
+          
+          echo "DYNATRACE_ENV=$DT_ENV" >> $GITHUB_ENV
+          echo "DYNATRACE_TOKEN=$DT_TOKEN" >> $GITHUB_ENV
+
           echo "📋 Criando arquivo de inventory..."
           cat > /tmp/inventory.ini << EOF
           [ec2]
-          $EC2_IP ansible_ssh_private_key_file=/tmp/ssh_key ansible_user=ubuntu
+          $EC2_IP ansible_ssh_private_key_file=/tmp/ssh_key ansible_user=ubuntu ansible_ssh_common_args='-o StrictHostKeyChecking=no'
           EOF
 
       - name: 🚀 Executa playbook do Ansible
         run: ansible-playbook -i /tmp/inventory.ini ansible/oneagent.yaml
+        env:
+          DYNATRACE_ENV: ${{ env.DYNATRACE_ENV }}
+          DYNATRACE_TOKEN: ${{ env.DYNATRACE_TOKEN }}
