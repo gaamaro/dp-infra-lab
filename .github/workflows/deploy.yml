@@ -136,7 +136,10 @@ jobs:
           sudo rm -f /var/lib/dpkg/lock*
           sudo dpkg --configure -a
           sudo apt-get update
-          sudo apt-get install -y ansible tzdata
+          sudo apt-get install -y tzdata
+          echo "America/Sao_Paulo" | sudo tee /etc/timezone
+          sudo dpkg-reconfigure -f noninteractive tzdata
+          sudo apt-get install -y ansible
 
       - name: 🔐 Obtém IP da EC2 e chave SSH do Vault
         run: |
