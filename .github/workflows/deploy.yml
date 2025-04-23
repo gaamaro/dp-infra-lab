@@ -131,7 +131,10 @@ jobs:
 
       - name: 🧰 Instala Ansible
         run: |
-          export DEBIAN_FRONTEND=noninteractive
+          sudo rm -f /var/lib/apt/lists/lock
+          sudo rm -f /var/cache/apt/archives/lock
+          sudo rm -f /var/lib/dpkg/lock*
+          sudo dpkg --configure -a
           sudo apt-get update
           sudo apt-get install -y ansible tzdata
 
