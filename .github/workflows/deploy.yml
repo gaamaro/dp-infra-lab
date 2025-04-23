@@ -195,8 +195,9 @@ jobs:
           
           echo "DYNATRACE_ENV=$DT_ENV" >> $GITHUB_ENV
           echo "DYNATRACE_TOKEN=$DT_TOKEN" >> $GITHUB_ENV
+          echo "EC2_IP=$EC2_IP" >> $GITHUB_ENV
 
       - name: 🚀 Executa instalação do OneAgent
         run: |
           cd config
-          make install-oneagent EC2_IP="$EC2_IP" DYNATRACE_ENV="$DYNATRACE_ENV" DYNATRACE_TOKEN="$DYNATRACE_TOKEN"
+          make install-oneagent
