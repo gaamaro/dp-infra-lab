@@ -142,11 +142,7 @@ jobs:
 
       - name: 🧰 Instala Ansible
         run: |
-          sudo apt-get update
-          sudo apt-get install -y python3-pip python3-venv
-          python3 -m venv /tmp/ansible-venv
-          source /tmp/ansible-venv/bin/activate
-          pip install ansible
+          ansible --version
 
       - name: 🔐 Obtém IP da EC2 e chave SSH do Vault
         run: |
@@ -209,9 +205,4 @@ jobs:
           ssh -i /tmp/ssh_key -o StrictHostKeyChecking=no ubuntu@"$EC2_IP" "sudo apt-get update && sudo apt-get install -y python3-pip python3-venv && python3 -m venv /tmp/ansible-venv && source /tmp/ansible-venv/bin/activate && pip install ansible"
 
       - name: 🚀 Executa playbook do Ansible
-        run: |
-          source /tmp/ansible-venv/bin/activate
-          ansible-playbook -i /tmp/inventory.ini ansible/oneagent.yaml
-        env:
-          DYNATRACE_ENV: ${{ env.DYNATRACE_ENV }}
-          DYNATRACE_TOKEN: ${{ env.DYNATRACE_TOKEN }}
+        run: ansible-playbook -i /tmp/inventory.ini ansible/oneagent.yaml --extra-vars "dynatrace_env=${{ env.DYNATRACE_ENV }} dynatrace_token=${{ env.DYNATRACE_TOKEN }}"
