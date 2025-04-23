@@ -110,8 +110,12 @@ jobs:
 
       - name: 💾 Salva IP da EC2 no Vault
         run: |
-          echo "🔍 Obtendo IP da EC2 do output do Terraform..."
-          EC2_IP=$(terraform output -raw ec2_public_ip | grep -oE '[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}')
+          echo "🔍 Obtendo IP da EC2 do Vault..."
+          VAULT_EC2=$(curl -s --header "X-Vault-Token: $VAULT_TOKEN" \
+            --request GET \
+            $VAULT_ADDR/v1/kv/data/ec2-ip)
+          
+          EC2_IP=$(echo "$VAULT_EC2" | jq -r '.data.data.ip')
           echo "📝 IP da EC2: $EC2_IP"
 
           VAULT_PATH="kv/data/ec2-ip"
@@ -139,10 +143,10 @@ jobs:
         run: |
           echo "🔍 Obtendo IP da EC2 do Vault..."
           VAULT_EC2=$(curl -s --header "X-Vault-Token: $VAULT_TOKEN" \
-            --request GET \x
+            --request GET \
             $VAULT_ADDR/v1/kv/data/ec2-ip)
           
-          EC2_IP=$(echo "$VAULT_EC2" | jq -r '.data.data.ec2_ip')
+          EC2_IP=$(echo "$VAULT_EC2" | jq -r '.data.data.ip')
           echo "📝 IP da EC2: $EC2_IP"
 
           echo "🔐 Obtendo chave SSH do Vault..."
