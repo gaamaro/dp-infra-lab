@@ -25,10 +25,11 @@ check-oneagent:
 	@ssh -i $(SSH_KEY) -o StrictHostKeyChecking=no ubuntu@$(EC2_IP) "\
 		if sudo systemctl is-active --quiet oneagent; then \
 			echo '✅ OneAgent já está instalado e rodando'; \
-			exit 1; \
+			exit 0; \
 		else \
 			echo '📦 OneAgent não encontrado, prosseguindo com instalação'; \
-		fi"
+			exit 1; \
+		fi" || make install-oneagent-core
 
 # Verifica se o Docker já está instalado
 check-docker:
@@ -36,13 +37,14 @@ check-docker:
 	@ssh -i $(SSH_KEY) -o StrictHostKeyChecking=no ubuntu@$(EC2_IP) "\
 		if command -v docker &> /dev/null && sudo systemctl is-active --quiet docker; then \
 			echo '✅ Docker já está instalado e rodando'; \
-			exit 1; \
+			exit 0; \
 		else \
 			echo '📦 Docker não encontrado ou não está rodando, prosseguindo com instalação'; \
-		fi"
+			exit 1; \
+		fi" || make install-docker-core
 
-# Instala o OneAgent
-install-oneagent: check-env check-oneagent
+# Instala o OneAgent (core)
+install-oneagent-core:
 	@echo "🚀 Iniciando instalação do OneAgent em $(EC2_IP)..."
 	@echo "📥 URL do instalador: $(DYNATRACE_URL)/api/v1/deployment/installer/agent/unix/default/latest?arch=x86"
 	@ssh -i $(SSH_KEY) -o StrictHostKeyChecking=no ubuntu@$(EC2_IP) "\
@@ -55,8 +57,8 @@ install-oneagent: check-env check-oneagent
 		sudo ./Dynatrace-OneAgent-Linux-x86-latest.sh --set-app-log-content-access=true --set-infra-only=false --set-host-group=EC2 && \
 		echo '✅ OneAgent instalado com sucesso!'"
 
-# Instala o Docker e suas dependências
-install-docker: check-env check-docker
+# Instala o Docker (core)
+install-docker-core:
 	@echo "🐳 Iniciando instalação do Docker em $(EC2_IP)..."
 	@ssh -i $(SSH_KEY) -o StrictHostKeyChecking=no ubuntu@$(EC2_IP) "\
 		echo '🧹 Removendo versões antigas do Docker...' && \
@@ -88,6 +90,12 @@ install-docker: check-env check-docker
 		sudo systemctl enable containerd.service && \
 		\
 		echo '✅ Docker instalado com sucesso!'"
+
+# Instala o OneAgent (entrada principal)
+install-oneagent: check-env check-oneagent
+
+# Instala o Docker (entrada principal)
+install-docker: check-env check-docker
 
 # Limpa arquivos temporários
 clean:
