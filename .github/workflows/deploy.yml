@@ -197,7 +197,17 @@ jobs:
           echo "DYNATRACE_TOKEN=$DT_TOKEN" >> $GITHUB_ENV
           echo "EC2_IP=$EC2_IP" >> $GITHUB_ENV
 
-      - name: 🚀 Executa instalação do OneAgent
+      - name: 🔍 Verifica e instala OneAgent
         run: |
           cd config
           make install-oneagent
+
+      - name: 🐳 Verifica e instala Docker
+        run: |
+          cd config
+          make install-docker
+
+      - name: 🧹 Limpa arquivos temporários
+        run: |
+          cd config
+          make clean
