@@ -16,7 +16,7 @@ HOST_ID ?= $(shell echo $$DT_HOST_ID)
 check-env:
 	@echo "🔍 Verificando variáveis de ambiente..."
 	@if [ -z "$(TENANT_ID)" ]; then echo "❌ Não foi possível extrair TENANT_ID do DYNATRACE_ENV"; exit 1; fi
-	@if [ -z "$(DYNATRACE_EVENTS_TOKEN)" ]; then echo "❌ DYNATRACE_EVENTS_TOKEN não definido"; exit 1; fi
+	@if [ -z "$(DYNATRACE_TOKEN)" ]; then echo "❌ DYNATRACE_EVENTS_TOKEN não definido"; exit 1; fi
 	@if [ -z "$(GITHUB_RUN_ID)" ]; then echo "❌ GITHUB_RUN_ID não definido"; exit 1; fi
 	@if [ -z "$(GITHUB_ACTOR)" ]; then echo "❌ GITHUB_ACTOR não definido"; exit 1; fi
 	@if [ -z "$(HOST_ID)" ]; then echo "❌ HOST_ID não definido"; exit 1; fi
