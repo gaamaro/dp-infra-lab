@@ -211,3 +211,87 @@ jobs:
         run: |
           cd config
           make clean
+
+  governance_gate:
+    name: 🔐 Gate de Governança
+    needs: [install_dynatrace]
+    runs-on: self-hosted
+
+    steps:
+      - name: 📦 Checkout do código
+        uses: actions/checkout@v3
+
+      - name: 🧰 Instala dependências
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y make curl
+
+      - name: 🔐 Obtém credenciais do Vault
+        run: |
+          echo "🔐 Obtendo credenciais Dynatrace do Vault..."
+          VAULT_DT=$(curl -s --header "X-Vault-Token: $VAULT_TOKEN" \
+            --request GET \
+            $VAULT_ADDR/v1/kv/data/dynatrace)
+          
+          DT_ENV=$(echo "$VAULT_DT" | jq -r '.data.data.env')
+          DT_TOKEN=$(echo "$VAULT_DT" | jq -r '.data.data.token')
+          
+          if [ -z "$DT_ENV" ] || [ -z "$DT_TOKEN" ]; then
+            echo "❌ Erro: Não foi possível obter as credenciais do Dynatrace"
+            exit 1
+          fi
+          
+          echo "DYNATRACE_ENV=$DT_ENV" >> $GITHUB_ENV
+          echo "DYNATRACE_TOKEN=$DT_TOKEN" >> $GITHUB_ENV
+
+          echo "🔐 Obtendo IP da EC2 do Vault..."
+          VAULT_EC2=$(curl -s --header "X-Vault-Token: $VAULT_TOKEN" \
+            --request GET \
+            $VAULT_ADDR/v1/kv/data/ec2-ip)
+          
+          EC2_IP=$(echo "$VAULT_EC2" | jq -r '.data.data.ip')
+          if [ -z "$EC2_IP" ]; then
+            echo "❌ Erro: Não foi possível obter o IP da EC2"
+            exit 1
+          fi
+          
+          echo "EC2_IP=$EC2_IP" >> $GITHUB_ENV
+
+      - name: 🔑 Configura chave SSH
+        run: |
+          echo "🔐 Obtendo chave SSH do Vault..."
+          VAULT_SSH=$(curl -s --header "X-Vault-Token: $VAULT_TOKEN" \
+            --request GET \
+            $VAULT_ADDR/v1/kv/data/ssh-default)
+          
+          PRIVATE_KEY=$(echo "$VAULT_SSH" | jq -r '.data.data.private_key')
+          if [ -z "$PRIVATE_KEY" ]; then
+            echo "❌ Erro: Não foi possível obter a chave SSH"
+            exit 1
+          fi
+          
+          echo "$PRIVATE_KEY" > /tmp/ssh_key
+          chmod 600 /tmp/ssh_key
+
+      - name: 🔍 Obtém HOST-ID do Dynatrace
+        run: |
+          echo "🔍 Obtendo HOST-ID via SSH..."
+          HOST_ID=$(ssh -i /tmp/ssh_key -o StrictHostKeyChecking=no ubuntu@$EC2_IP \
+            "sudo /opt/dynatrace/oneagent/agent/tools/oneagentctl --get-host-id" 2>/dev/null)
+          
+          if [ -z "$HOST_ID" ]; then
+            echo "❌ Erro: Não foi possível obter o HOST-ID"
+            exit 1
+          fi
+          
+          echo "✅ HOST-ID obtido: $HOST_ID"
+          echo "DT_HOST_ID=$HOST_ID" >> $GITHUB_ENV
+
+      - name: 📤 Envia evento de deployment
+        run: |
+          cd compliance
+          make notify-governance
+
+      - name: 🧹 Limpa arquivos temporários
+        if: always()
+        run: rm -f /tmp/ssh_key
