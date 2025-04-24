@@ -1,7 +1,7 @@
 # Variáveis
-TENANT_ID ?= $(shell echo $$DYNATRACE_ENV | grep -o 'ogp[0-9]*')
+TTENANT_ID ?= $(shell echo $$DYNATRACE_ENV | grep -o 'ogp[0-9]*')
 DYNATRACE_URL ?= https://$(TENANT_ID).live.dynatrace.com
-DYNATRACE_EVENTS_TOKEN ?= $(shell curl -s --header "X-Vault-Token: $$VAULT_TOKEN" --request GET $$VAULT_ADDR/v1/kv/data/dynatrace | jq -r '.data.data.pipe_token')
+DYNATRACE_TOKEN ?= $(shell echo $$DYNATRACE_TOKEN)
 GITHUB_RUN_ID ?= $(shell echo $$GITHUB_RUN_ID)
 GITHUB_ACTOR ?= $(shell echo $$GITHUB_ACTOR)
 GITHUB_SERVER_URL ?= $(shell echo $$GITHUB_SERVER_URL)

@@ -279,6 +279,23 @@ jobs:
           echo "✅ HOST-ID obtido: $HOST_ID"
           echo "DT_HOST_ID=$HOST_ID" >> $GITHUB_ENV
 
+      - name: 🔐 Obtém credenciais Dynatrace do Vault
+        run: |
+          VAULT_DT=$(curl -s --header "X-Vault-Token: $VAULT_TOKEN" \
+            --request GET \
+            $VAULT_ADDR/v1/kv/data/dynatrace)
+          
+          DT_ENV=$(echo "$VAULT_DT" | jq -r '.data.data.env')
+          DT_TOKEN=$(echo "$VAULT_DT" | jq -r '.data.data.token')
+          
+          if [ -z "$DT_ENV" ] || [ -z "$DT_TOKEN" ]; then
+            echo "❌ Erro: Não foi possível obter as credenciais do Dynatrace"
+            exit 1
+          fi
+          
+          echo "DYNATRACE_ENV=$DT_ENV" >> $GITHUB_ENV
+          echo "DYNATRACE_TOKEN=$DT_TOKEN" >> $GITHUB_ENV
+
       - name: 📤 Envia evento de deployment
         run: |
           cd compliance
