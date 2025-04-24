@@ -22,6 +22,17 @@ check-env:
 	@if [ -z "$(HOST_ID)" ]; then echo "❌ HOST_ID não definido"; exit 1; fi
 	@echo "✅ Todas as variáveis de ambiente estão definidas"
 
+	@echo "Debug VARs"
+	@echo "TENANT_ID: $(TENANT_ID)"
+	@echo "DYNATRACE_TOKEN: $(DYNATRACE_TOKEN)"
+	@echo "GITHUB_RUN_ID: $(GITHUB_RUN_ID)"
+	@echo "GITHUB_ACTOR: $(GITHUB_ACTOR)"
+	@echo "HOST_ID: $(HOST_ID)"
+	@echo "GITHUB_SERVER_URL: $(GITHUB_SERVER_URL)"
+	@echo "GITHUB_REPOSITORY: $(GITHUB_REPOSITORY)"
+	@echo "PIPELINE_URL: $(PIPELINE_URL)"
+	@echo "TIMESTAMP: $(TIMESTAMP)"
+
 # Envia evento de deployment para o Dynatrace
 send-deployment-event:
 	@echo "📤 Enviando evento de deployment para o Dynatrace..."
