@@ -27,7 +27,8 @@ send-deployment-event:
 	@echo "📤 Enviando evento de deployment para o Dynatrace..."
 	@curl -X POST "$(DYNATRACE_URL)/api/v2/events/ingest" \
 		-H "Authorization: Api-Token $(DYNATRACE_TOKEN)" \
-		-H "Content-Type: application/json" \
+		-H 'accept: application/json; charset=utf-8' \
+		-H 'Content-Type: application/json; charset=utf-8' \
 		-d '{ \
 			"eventType": "CUSTOM_DEPLOYMENT", \
 			"title": "Deployment EC2 Infrastructure", \

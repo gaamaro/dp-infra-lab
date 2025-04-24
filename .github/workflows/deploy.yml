@@ -286,7 +286,7 @@ jobs:
             $VAULT_ADDR/v1/kv/data/dynatrace)
           
           DT_ENV=$(echo "$VAULT_DT" | jq -r '.data.data.env')
-          DT_TOKEN=$(echo "$VAULT_DT" | jq -r '.data.data.token')
+          DT_TOKEN=$(echo "$VAULT_DT" | jq -r '.data.data.pipe_token')
           
           if [ -z "$DT_ENV" ] || [ -z "$DT_TOKEN" ]; then
             echo "❌ Erro: Não foi possível obter as credenciais do Dynatrace"
