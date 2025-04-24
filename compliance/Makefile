@@ -38,21 +38,9 @@ send-deployment-event:
 	@echo "📤 Enviando evento de deployment para o Dynatrace..."
 	@curl -X POST "$(DYNATRACE_URL)/api/v2/events/ingest" \
 		-H "Authorization: Api-Token $(DYNATRACE_TOKEN)" \
-		-H 'accept: application/json; charset=utf-8' \
-		-H 'Content-Type: application/json; charset=utf-8' \
-		-d '{ \
-			"eventType": "CUSTOM_DEPLOYMENT", \
-			"title": "Deployment EC2 Infrastructure", \
-			"timeout": 15, \
-			"entitySelector": "type(HOST),entityId(HOST-$(HOST_ID))", \
-			"properties": { \
-				"Pipeline URL": "$(PIPELINE_URL)", \
-				"Deployment ID": "$(GITHUB_RUN_ID)", \
-				"Responsável": "$(GITHUB_ACTOR)", \
-				"Timestamp": "$(TIMESTAMP)" \
-			} \
-		}'
-
+		-H "accept: application/json" \
+		-H "Content-Type: application/json" \
+		-d '{"eventType":"CUSTOM_DEPLOYMENT","title":"Deployment EC2 Infrastructure","timeout":15,"entitySelector":"type(HOST),entityId(HOST-$(HOST_ID))","properties":{"Pipeline URL":"$(PIPELINE_URL)","Deployment ID":"$(GITHUB_RUN_ID)","Responsável":"$(GITHUB_ACTOR)","Timestamp":"$(TIMESTAMP)"}}'
 
 # Target principal
 notify-governance: check-env send-deployment-event
