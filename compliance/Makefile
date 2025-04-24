@@ -26,7 +26,7 @@ check-env:
 send-deployment-event:
 	@echo "📤 Enviando evento de deployment para o Dynatrace..."
 	@curl -X POST "$(DYNATRACE_URL)/api/v2/events/ingest" \
-		-H "Authorization: Api-Token $(DYNATRACE_EVENTS_TOKEN)" \
+		-H "Authorization: Api-Token $(DYNATRACE_TOKEN)" \
 		-H "Content-Type: application/json" \
 		-d '{ \
 			"eventType": "CUSTOM_DEPLOYMENT", \
@@ -40,6 +40,7 @@ send-deployment-event:
 				"Timestamp": "$(TIMESTAMP)" \
 			} \
 		}'
+
 
 # Target principal
 notify-governance: check-env send-deployment-event
