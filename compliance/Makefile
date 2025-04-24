@@ -1,5 +1,5 @@
 # Variáveis
-TTENANT_ID ?= $(shell echo $$DYNATRACE_ENV | grep -o 'ogp[0-9]*')
+TENANT_ID ?= $(shell echo $$DYNATRACE_ENV | grep -o 'ogp[0-9]*')
 DYNATRACE_URL ?= https://$(TENANT_ID).live.dynatrace.com
 DYNATRACE_TOKEN ?= $(shell echo $$DYNATRACE_TOKEN)
 GITHUB_RUN_ID ?= $(shell echo $$GITHUB_RUN_ID)
