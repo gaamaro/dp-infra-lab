@@ -62,10 +62,10 @@ install-docker-core:
 	@echo "🐳 Iniciando instalação do Docker em $(EC2_IP)..."
 	@ssh -i $(SSH_KEY) -o StrictHostKeyChecking=no ubuntu@$(EC2_IP) "\
 		echo '🧹 Removendo versões antigas do Docker...' && \
-		for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove -y \$$pkg; done && \
+		for pkg in docker.io docker-doc docker-compose docker-compose-v2 podman-docker containerd runc; do sudo apt-get remove -y \$$pkg || true; done && \
 		\
 		echo '📦 Instalando dependências...' && \
-		sudo apt-get update && \
+		sudo apt-get update || true && \
 		sudo apt-get install -y ca-certificates curl && \
 		\
 		echo '🔑 Configurando repositório do Docker...' && \
@@ -79,7 +79,7 @@ install-docker-core:
 		sudo tee /etc/apt/sources.list.d/docker.list > /dev/null && \
 		\
 		echo '📦 Instalando Docker...' && \
-		sudo apt-get update && \
+		sudo apt-get update || true && \
 		sudo apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin && \
 		\
 		echo '👤 Configurando permissões...' && \
@@ -88,6 +88,8 @@ install-docker-core:
 		echo '🔄 Habilitando serviços...' && \
 		sudo systemctl enable docker.service && \
 		sudo systemctl enable containerd.service && \
+		sudo systemctl start docker.service && \
+		sudo systemctl start containerd.service && \
 		\
 		echo '✅ Docker instalado com sucesso!'"
 
